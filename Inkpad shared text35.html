@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+ <title>Editor Himnario Seguro</title>
+ <style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{min-height:100vh;font-family:'Georgia',serif;background:#E8D9B5;}
+:root{--fondo-app:#E8D9B5;--color-primario:#2C1810;--color-dorado:#FFD700;--color-borde:#8B6A29;--fondo-tarjeta:#F5EED8;--color-vacio:#A08060;}
+.app{max-width:480px;margin:0 auto;min-height:100vh;background:var(--fondo-app);position:relative;}
+header{background:linear-gradient(to bottom,var(--color-primario),#1E1209);padding:12px 10px;text-align:center;position:relative;border-bottom:2px solid var(--color-borde);}
+.menu-btn{position:absolute;left:18px;top:50%;transform:translateY(-50%);font-size:28px;color:var(--color-dorado);cursor:pointer;z-index:1000;display:block;}
+.tit1{font-size:17px;color:var(--color-dorado);font-weight:bold;}
+.tit2{font-size:30px;color:var(--color-dorado);font-weight:bold;}
+.separador{width:180px;height:2px;background:linear-gradient(to right,transparent,var(--color-dorado),transparent);margin:6px auto;}
+.buscador-caja{background:#3D2515;padding:8px 12px;}
+.buscador{width:100%;padding:10px 14px;font-size:26px;font-weight:bold;border-radius:18px;border:2px solid var(--color-borde);background:var(--fondo-tarjeta);color:var(--color-primario);outline:none;}
+.buscador::placeholder{font-size:17px;font-weight:normal;color:#8B7355;}
+.barra-sup{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-bottom:1px solid var(--color-borde);font-size:13px;}
+.contador{font-weight:bold;color:var(--color-borde);}
+.btn-editar{padding:5px 12px;border-radius:15px;border:none;background:var(--color-borde);color:#FFF8DC;font-weight:bold;cursor:pointer;font-size:12px;}
+.btn-editar.activo{background:var(--color-primario);color:var(--color-dorado);border:2px solid var(--color-dorado);}
+.seleccion-seccion{display:flex;gap:8px;padding:8px 12px;border-bottom:1px solid var(--color-borde);}
+.btn-seccion{flex:1;padding:10px;border-radius:6px;border:2px solid var(--color-borde);background:var(--fondo-tarjeta);color:var(--color-primario);font-weight:bold;cursor:pointer;}
+.btn-seccion.activa{background:var(--color-primario);color:var(--color-dorado);border-color:var(--color-dorado);}
+.lista{padding:8px 12px 90px;}
+.item{display:flex;align-items:center;padding:12px;margin-bottom:6px;border-radius:8px;background:var(--fondo-tarjeta);border:1px solid var(--color-borde);cursor:pointer;}
+.item.vacio{opacity:0.7;}
+.num-circulo{width:40px;height:40px;border-radius:50%;background:var(--color-primario);color:var(--color-dorado);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:bold;margin-right:12px;border:2px solid var(--color-borde);flex-shrink:0;}
+.tit-himno{flex:1;font-size:16px;color:var(--color-primario);}
+.tit-himno.vacio{color:var(--color-vacio);font-style:italic;}
+.estrella{color:#B8860B;font-size:20px;margin-right:6px;cursor:pointer;}
+.estrella.activa{color:var(--color-dorado);}
+.flecha{color:var(--color-borde);font-size:18px;}
+nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:var(--color-primario);display:flex;justify-content:space-around;padding:10px 0;border-top:2px solid var(--color-borde);z-index:50;}
+.nav-item{display:flex;flex-direction:column;align-items:center;color:#B8860B;font-size:13px;cursor:pointer;gap:3px;}
+.nav-item.activo{color:var(--color-dorado);}
+.nav-icon{font-size:22px;display:flex;align-items:center;justify-content:center;}
+.icon-acerca{width:24px;height:24px;border-radius:50%;background:var(--color-primario);border:2px solid var(--color-dorado);color:var(--color-dorado);display:inline-flex;align-items:center;justify-content:center;font-family:'Georgia',serif;font-weight:bold;font-style:italic;font-size:15px;line-height:1;}
+.capa-fondo{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:900;display:none;}
+.capa-fondo.abierta{display:block;}
+.menu-lateral{position:fixed;top:0;left:0;width:300px;height:100%;background:var(--fondo-app);z-index:950;transform:translateX(-100%);transition:transform 0.3s ease;overflow-y:auto;border-right:3px solid var(--color-borde);display:block;}
+.menu-lateral.abierto{transform:translateX(0);}
+.menu-cab{background:var(--color-primario);color:var(--color-dorado);padding:20px;text-align:center;font-size:20px;font-weight:bold;position:relative;}
+.cerrar-menu{position:absolute;top:15px;right:15px;color:var(--color-dorado);font-size:24px;cursor:pointer;}
+.menu-seccion{padding:15px;border-bottom:1px solid var(--color-borde);}
+.menu-tit-seccion{font-size:15px;font-weight:bold;color:var(--color-borde);margin-bottom:10px;}
+.campo-texto{width:100%;padding:10px;border:2px solid var(--color-borde);border-radius:6px;background:#fff;outline:none;margin-bottom:10px;font-size:16px;}
+.area-grande{width:100%;min-height:120px;padding:10px;border:2px solid var(--color-borde);border-radius:6px;background:#fff;resize:vertical;outline:none;margin-bottom:10px;}
+.btn{width:100%;padding:10px;border:none;border-radius:6px;font-weight:bold;cursor:pointer;margin-top:5px;}
+.btn-primario{background:var(--color-primario);color:var(--color-dorado);border:2px solid var(--color-dorado);}
+.btn-naranja{background:linear-gradient(to right,#FF9800,#E65100);color:white;}
+.btn-verde{background:linear-gradient(to right,#4CAF50,#2E7D32);color:white;}
+.btn-rojo{background:linear-gradient(to right,#C62828,#8E0000);color:white;}
+.btn-azul{background:linear-gradient(to right,#1565C0,#0D47A1);color:white;}
+.ayuda{font-size:12px;color:var(--color-borde);margin-top:6px;line-height:1.5;}
+.modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);display:none;z-index:1000;overflow-y:auto;padding:15px;}
+.modal.abierto{display:flex;align-items:flex-start;justify-content:center;}
+.modal-caja{background:var(--fondo-app);width:100%;max-width:440px;border-radius:12px;padding:15px;border:3px solid var(--color-borde);color:var(--color-primario);}
+.modal-tit{text-align:center;font-size:20px;font-weight:bold;margin-bottom:12px;}
+.modal-etq{font-weight:bold;margin:10px 0 4px;display:block;color:var(--color-borde);}
+.modal-input,.modal-textarea{width:100%;border:2px solid var(--color-borde);border-radius:8px;padding:10px;font-size:16px;background:var(--fondo-tarjeta);color:var(--color-primario);outline:none;}
+.modal-textarea{min-height:250px;resize:vertical;white-space:pre-wrap;line-height:1.6;}
+.modal-botones{display:flex;gap:10px;margin-top:15px;}
+.vista{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--fondo-app);z-index:200;transform:translateX(100%);transition:transform 0.25s ease-out;overflow-y:auto;}
+.vista.abierta{transform:translateX(0);}
+.vista-cab{position:sticky;top:0;background:var(--color-primario);padding:12px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid var(--color-borde);z-index:201;}
+.vista-atras{color:var(--color-dorado);font-size:32px;cursor:pointer;padding:4px 18px 4px 5px;font-weight:bold;margin-right:25px;}
+.vista-tit-bar{color:var(--color-dorado);font-size:18px;text-align:center;flex:1;}
+.ctrl-letras{display:flex;gap:8px;align-items:center;}
+.btn-letras{background:var(--color-borde);color:#FFF8DC;border:none;width:36px;height:36px;border-radius:50%;font-size:18px;font-weight:bold;cursor:pointer;}
+.vista-contenido{padding:25px 15px 60px;min-height:100vh;color:var(--color-primario);font-size:22px;line-height:1.8;}
+.vista-num{display:none;}
+.vista-tit{font-size:24px;font-weight:900;text-align:center;margin-bottom:12px;color:var(--color-primario);text-transform:uppercase;letter-spacing:0.5px;line-height:1.3;}
+.linea-separadora-tit{width:100%;height:2px;background:var(--color-borde);margin:0 auto 20px auto;opacity:0.8;}
+.vista-texto{line-height:1.9;}
+.bloque-estrofa{background:rgba(255,255,255,0.35);border:1px solid var(--color-borde);border-radius:12px;padding:16px 14px;margin-bottom:24px;text-align:center;box-shadow:0 2px 5px rgba(0,0,0,0.05);}
+.bloque-coro{background:rgba(139,106,41,0.15);border:2px dashed var(--color-borde);border-radius:12px;padding:16px 14px;margin-bottom:24px;text-align:center;}
+.num-estrofa-centro{display:block;font-weight:bold;font-size:1.25em;color:var(--color-primario);text-align:center;margin-bottom:10px;letter-spacing:2px;}
+.linea-coro-encabezado{display:block;font-weight:bold;font-size:1.25em;color:var(--color-borde);text-align:center;margin-bottom:10px;text-transform:uppercase;letter-spacing:2px;}
+.pagina{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--fondo-app);z-index:250;transform:translateX(100%);transition:transform 0.25s ease-out;overflow-y:auto;}
+.pagina.abierta{transform:translateX(0);}
+.pagina-cab{position:sticky;top:0;background:var(--color-primario);padding:12px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid var(--color-borde);z-index:251;}
+.pagina-tit{color:var(--color-dorado);font-size:18px;font-weight:bold;text-align:center;flex:1;display:flex;align-items:center;justify-content:center;gap:8px;}
+.pagina-area{width:100%;min-height:300px;padding:15px;border:none;background:transparent;color:var(--color-primario);font-size:16px;line-height:1.8;outline:none;resize:none;}
+input[type="file"]{display:none;}
+body.app-fija .menu-btn,
+body.app-fija .btn-editar,
+body.app-fija .menu-lateral,
+body.app-fija .capa-fondo,
+body.app-fija .modal {display:none !important;}
+ </style>
+</head>
+<body>
+ <div class="app">
+  <header>
+   <div class="menu-btn" id="btnMenu">☰</div>
+   <div class="tit1" id="appTit1">HIMNARIO</div>
+   <div class="tit2" id="appTit2">PERSONALIZADO</div>
+   <div class="separador"></div>
+  </header>
+  <div class="buscador-caja"><input type="text" class="buscador" id="buscador" placeholder="Buscar por número, título o texto..."></div>
+  <div class="barra-sup solo-edicion"><span class="contador" id="contador">0 DE 593 HIMNOS</span><button class="btn-editar" id="btnEditar">MODO EDICIÓN</button></div>
+  <div class="seleccion-seccion">
+   <button class="btn-seccion activa" id="btnHimnos">🎵 HIMNOS</button>
+   <button class="btn-seccion" id="btnCoros">🎶 COROS</button>
+  </div>
+  <div class="lista" id="lista"></div>
+  <nav>
+   <div class="nav-item activo" id="navIndice"><span class="nav-icon">🏠</span>ÍNDICE</div>
+   <div class="nav-item" id="navFav"><span class="nav-icon">❤️</span>FAVORITOS</div>
+   <div class="nav-item" id="navMarc"><span class="nav-icon">📖</span>MARCADORES</div>
+   <div class="nav-item" id="navAcerca"><span class="nav-icon"><span class="icon-acerca">i</span></span>ACERCA DE</div>
+  </nav>
+ </div>
+
+ <div class="capa-fondo" id="capaFondo"></div>
+ <div class="menu-lateral" id="menuLateral">
+  <div class="menu-cab"><span class="cerrar-menu" id="btnCerrarMenu">✕</span>HERRAMIENTAS</div>
+  <div class="menu-seccion solo-edicion">
+   <div class="menu-tit-seccion">✏️ TÍTULO DEL HIMNARIO</div>
+   <input type="text" class="campo-texto" id="titPersonal1" placeholder="Título principal...">
+   <input type="text" class="campo-texto" id="titPersonal2" placeholder="Subtítulo...">
+   <button class="btn btn-primario" id="btnGuardarTit">💾 Guardar Título</button>
+  </div>
+  <div class="menu-seccion solo-edicion">
+   <div class="menu-tit-seccion">📂 CARGA MASIVA</div>
+   <div class="ayuda">🎵 HIMNOS: 1–593 / 🎶 COROS: 1–73<br>Formato: número arriba, título, estrofas, --- al final</div>
+   <textarea class="area-grande" id="cargaMasiva" placeholder="Pega aquí los himnos..."></textarea>
+   <button class="btn btn-naranja" id="btnProcesar">⚡ CARGAR</button>
+  </div>
+  <div class="menu-seccion solo-edicion">
+   <div class="menu-tit-seccion">📂 CARGA POR RANGO</div>
+   <div style="display:flex;gap:8px;margin:8px 0;">
+    <input type="number" class="campo-texto" style="flex:1;" id="rangoDesde" placeholder="Desde" min="1">
+    <input type="number" class="campo-texto" style="flex:1;" id="rangoHasta" placeholder="Hasta" min="1">
+   </div>
+   <button class="btn btn-primario" id="btnCargarRango">⚡ CARGAR RANGO</button>
+  </div>
+  <div class="menu-seccion solo-edicion">
+   <div class="menu-tit-seccion">🛡️ RESPALDO DE DATOS</div>
+   <button class="btn btn-azul" id="btnRespaldar">💾 DESCARGAR RESPALDO</button>
+   <button class="btn btn-azul" id="btnRestaurar" style="margin-top:8px;">📂 CARGAR RESPALDO</button>
+   <input type="file" id="archivoRespaldo" accept=".json">
+  </div>
+  <div class="menu-seccion">
+   <div class="menu-tit-seccion">📥 EXPORTAR APP FINAL</div>
+   <button class="btn btn-verde" id="btnExportar">📥 DESCARGAR HIMNARIO</button>
+  </div>
+  <div class="menu-seccion solo-edicion">
+   <div class="menu-tit-seccion">🗑️ BORRAR TODO</div>
+   <button class="btn btn-rojo" id="btnBorrarTodo">⚠️ ELIMINAR TODOS LOS DATOS</button>
+  </div>
+ </div>
+
+ <div class="modal solo-edicion" id="modalEditor">
+  <div class="modal-caja">
+   <div class="modal-tit">EDITAR <span id="tipoEditor"></span> — <span id="numEditor"></span></div>
+   <label class="modal-etq">Título:</label>
+   <input class="modal-input" id="tituloEditor" type="text">
+   <label class="modal-etq">Texto:</label>
+   <textarea class="modal-textarea" id="textoEditor"></textarea>
+   <div class="modal-botones">
+    <button class="btn btn-primario" id="btnCerrarEditor">CERRAR</button>
+    <button class="btn btn-verde" id="btnGuardarHimno">💾 GUARDAR</button>
+   </div>
+  </div>
+ </div>
+
+ <div class="vista" id="vistaHimno">
+  <div class="vista-cab">
+   <div class="vista-atras" id="btnAtras">❮</div>
+   <div class="vista-tit-bar" id="vistaTipo">Himno</div>
+   <div class="ctrl-letras">
+    <button class="btn-letras" id="btnLetraMenos">A-</button>
+    <button class="btn-letras" id="btnLetraMas">A+</button>
+   </div>
+  </div>
+  <div class="vista-contenido" id="cuerpoVista">
+   <div class="vista-num" id="numVista"></div>
+   <div class="vista-tit" id="titVista"></div>
+   <div class="linea-separadora-tit"></div>
+   <div class="vista-texto" id="textoVista"></div>
+  </div>
+ </div>
+
+ <div class="pagina" id="paginaMarcadores">
+  <div class="pagina-cab">
+   <div class="vista-atras" id="btnAtrasMarc">❮</div>
+   <div class="pagina-tit">📖 MARCADORES</div>
+  </div>
+  <div class="pagina-contenido">
+   <textarea class="pagina-area" id="areaMarcadores" placeholder="Escribe tus marcadores aquí..."></textarea>
+  </div>
+ </div>
+
+ <div class="pagina" id="paginaAcerca">
+  <div class="pagina-cab">
+   <div class="vista-atras" id="btnAtrasAcerca">❮</div>
+   <div class="pagina-tit"><span class="icon-acerca">i</span> ACERCA DE</div>
+  </div>
+  <div class="pagina-contenido">
+   <textarea class="pagina-area" id="areaAcerca" placeholder="Información del himnario..."></textarea>
+  </div>
+ </div>
+
+<script>
+const MAX_HIMNOS = 593;
+const MAX_COROS = 73;
+
+let seccionActiva = 'himnos';
+let datosHimnos = (typeof window.datosHimnos !== 'undefined') ? window.datosHimnos : {};
+let datosCoros = (typeof window.datosCoros !== 'undefined') ? window.datosCoros : {};
+let favoritos = (typeof window.favoritos !== 'undefined') ? window.favoritos : {};
+let modoEdicion = false;
+let filtroActivo = '';
+let numeroEditando = null;
+let tamanoLetra = 22;
+
+function guardarTodo(){
+  try{
+    localStorage.setItem('datosHimnos', JSON.stringify(datosHimnos));
+    localStorage.setItem('datosCoros', JSON.stringify(datosCoros));
+    localStorage.setItem('favoritos', JSON.stringify(favoritos));
+    localStorage.setItem('marcadores', document.getElementById('areaMarcadores').value);
+    localStorage.setItem('acerca', document.getElementById('areaAcerca').value);
+    localStorage.setItem('tit1', document.getElementById('appTit1').textContent);
+    localStorage.setItem('tit2', document.getElementById('appTit2').textContent);
+  }catch(e){}
+}
+
+function cargarTodo(){
+  try{
+    const h = localStorage.getItem('datosHimnos'); if(h) datosHimnos = JSON.parse(h);
+    const c = localStorage.getItem('datosCoros'); if(c) datosCoros = JSON.parse(c);
+    const f = localStorage.getItem('favoritos'); if(f) favoritos = JSON.parse(f);
+    const m = localStorage.getItem('marcadores'); if(m) document.getElementById('areaMarcadores').value = m;
+    const a = localStorage.getItem('acerca'); if(a) document.getElementById('areaAcerca').value = a;
+    const t1 = localStorage.getItem('tit1'); if(t1) document.getElementById('appTit1').textContent = t1;
+    const t2 = localStorage.getItem('tit2'); if(t2) document.getElementById('appTit2').textContent = t2;
+  }catch(e){}
+  
+  if(typeof window.marcadores !== 'undefined' && !document.getElementById('areaMarcadores').value){
+    document.getElementById('areaMarcadores').value = window.marcadores;
+  }
+  if(typeof window.acerca !== 'undefined' && !document.getElementById('areaAcerca').value){
+    document.getElementById('areaAcerca').value = window.acerca;
+  }
+  if(typeof window.tit1 !== 'undefined'){
+    document.getElementById('appTit1').textContent = window.tit1;
+  }
+  if(typeof window.tit2 !== 'undefined'){
+    document.getElementById('appTit2').textContent = window.tit2;
+  }
+
+  listarElementos();
+}
+
+function limpiar(txt) {
+  return txt.toString()
+    .toLowerCase()
+    .replace(/á/g, 'a')
+    .replace(/é/g, 'e')
+    .replace(/í/g, 'i')
+    .replace(/ó/g, 'o')
+    .replace(/ú/g, 'u')
+    .replace(/ñ/g, 'n')
+    .replace(/ü/g, 'u');
+}
+
+function coincide(texto, filtro) {
+  if (!filtro) return true;
+  return limpiar(texto).indexOf(limpiar(filtro)) !== -1;
+}
+
+function coincideNumero(num, filtro) {
+  if (!filtro) return true;
+  if (/[a-záéíóúñü]/i.test(filtro)) return false;
+  return num.toString().indexOf(filtro.trim()) === 0;
+}
+
+function limpiarBusqueda(){
+  const input = document.getElementById('buscador');
+  if(input) input.value = '';
+  filtroActivo = '';
+  if(document.getElementById('navFav') && document.getElementById('navFav').classList.contains('activo')){
+    listarFavoritos();
+  }else{
+    listarElementos();
+  }
+  actualizarContador();
+  window.scrollTo(0, 0);
+}
+
+function actualizarContador(){
+  const datos = seccionActiva === 'himnos' ? datosHimnos : datosCoros;
+  const maximo = seccionActiva === 'himnos' ? MAX_HIMNOS : MAX_COROS;
+  const nombre = seccionActiva === 'himnos' ? 'HIMNOS' : 'COROS';
+  const el = document.getElementById('contador');
+  if(el) el.textContent = `${Object.keys(datos).length} DE ${maximo} ${nombre}`;
+}
+
+const elBuscador = document.getElementById('buscador');
+function buscarYa() {
+  filtroActivo = elBuscador.value;
+  if(document.getElementById('navFav') && document.getElementById('navFav').classList.contains('activo')){
+    listarFavoritos();
+  }else{
+    listarElementos();
+  }
+}
+elBuscador.addEventListener('input', buscarYa);
+elBuscador.addEventListener('keyup', buscarYa);
+
+function listarElementos(){
+  actualizarContador();
+  const contenedor = document.getElementById('lista');
+  contenedor.innerHTML = '';
+  const max = seccionActiva === 'himnos' ? MAX_HIMNOS : MAX_COROS;
+  const mapa = seccionActiva === 'himnos' ? datosHimnos : datosCoros;
+
+  for(let i = 1; i <= max; i++){
+    const itemData = mapa[i];
+    const tieneContenido = itemData && itemData.titulo;
+    const titulo = tieneContenido ? itemData.titulo : 'Sin contenido';
+    const texto = tieneContenido ? itemData.texto : '';
+
+    if(filtroActivo){
+      const hayNum = coincideNumero(i, filtroActivo);
+      const hayTit = coincide(titulo, filtroActivo);
+      const hayTex = coincide(texto, filtroActivo);
+      if(!hayNum && !hayTit && !hayTex) continue;
+    }
+
+    const div = document.createElement('div');
+    div.className = `item ${tieneContenido ? '' : 'vacio'}`;
+    const esFav = favoritos[`${seccionActiva}_${i}`];
+
+    div.innerHTML = `
+      <div class="num-circulo">${i}</div>
+      <div class="tit-himno ${tieneContenido ? '' : 'vacio'}">${titulo}</div>
+      <span class="estrella ${esFav ? 'activa' : ''}" data-id="${i}">★</span>
+      <span class="flecha">❯</span>
+    `;
+
+    div.querySelector('.estrella').addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const clave = `${seccionActiva}_${i}`;
+      if(favoritos[clave]) delete favoritos[clave];
+      else favoritos[clave] = true;
+      guardarTodo();
+      if(document.getElementById('navFav') && document.getElementById('navFav').classList.contains('activo')){
+        listarFavoritos();
+      }else{
+        listarElementos();
+      }
+    });
+
+    div.addEventListener('click', ()=>{
+      if(modoEdicion){
+        abrirEditor(i);
+      }else{
+        if(tieneContenido) abrirVista(i);
+        else alert(`El ${seccionActiva === 'himnos' ? 'himno' : 'coro'} #${i} no tiene contenido grabado.`);
+      }
+    });
+
+    contenedor.appendChild(div);
+  }
+}
+
+function listarFavoritos(){
+  const contenedor = document.getElementById('lista');
+  contenedor.innerHTML = '';
+  const mapa = seccionActiva === 'himnos' ? datosHimnos : datosCoros;
+
+  Object.keys(favoritos).forEach(clave =>{
+    const [tipo, numStr] = clave.split('_');
+    if(tipo !== seccionActiva) return;
+    const num = parseInt(numStr);
+    const itemData = mapa[num];
+    const tieneContenido = itemData && itemData.titulo;
+    const titulo = tieneContenido ? itemData.titulo : 'Sin contenido';
+    const texto = tieneContenido ? itemData.texto : '';
+
+    if(filtroActivo){
+      const hayNum = coincideNumero(num, filtroActivo);
+      const hayTit = coincide(titulo, filtroActivo);
+      const hayTex = coincide(texto, filtroActivo);
+      if(!hayNum && !hayTit && !hayTex) return;
+    }
+
+    const div = document.createElement('div');
+    div.className = 'item';
+    div.innerHTML = `
+      <div class="num-circulo">${num}</div>
+      <div class="tit-himno">${titulo}</div>
+      <span class="estrella activa" data-id="${num}">★</span>
+      <span class="flecha">❯</span>
+    `;
+
+    div.querySelector('.estrella').addEventListener('click', (e)=>{
+      e.stopPropagation();
+      delete favoritos[clave];
+      guardarTodo();
+      listarFavoritos();
+    });
+
+    div.addEventListener('click', ()=>{
+      if(tieneContenido) abrirVista(num);
+    });
+
+    contenedor.appendChild(div);
+  });
+}
+
+function formatearTextoHimno(texto) {
+  if(!texto) return '';
+  let t = texto.replace(/\r\n/g, '\n').trim();
+  t = t.replace(/([^\n])\s*(\b\d+[\.\-]?\s+|CORO|Coro|coro)/g, '$1\n\n$2');
+  let bloques = t.split(/\n\s*\n/);
+
+  return bloques.map((bloque) => {
+    let lineas = bloque.trim().split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    if (lineas.length === 0) return '';
+    let primeraLinea = lineas[0];
+    const matchNumero = primeraLinea.match(/^(\d+)[\.\-]?\s*(.*)/);
+
+    if (matchNumero) {
+      const numEstrofa = matchNumero[1];
+      const restoPrimeraLinea = matchNumero[2];
+      let versos = [];
+      if (restoPrimeraLinea) versos.push(restoPrimeraLinea);
+      versos = versos.concat(lineas.slice(1));
+      return `<div class="bloque-estrofa"><span class="num-estrofa-centro">— ${numEstrofa} —</span><div>${versos.join('<br>')}</div></div>`;
+    } 
+    else if (/^coro/i.test(primeraLinea)) {
+      let versos = lineas.slice(1);
+      if (!/^coro:?$/i.test(primeraLinea)) versos = lineas;
+      return `<div class="bloque-coro"><span class="linea-coro-encabezado">— CORO —</span><div>${versos.join('<br>')}</div></div>`;
+    }
+    else {
+      return `<div class="bloque-estrofa"><div>${lineas.join('<br>')}</div></div>`;
+    }
+  }).join('');
+}
+
+function abrirVista(num){
+  const mapa = seccionActiva === 'himnos' ? datosHimnos : datosCoros;
+  const item = mapa[num];
+  if(!item) return;
+  document.getElementById('numVista').textContent = num;
+  document.getElementById('titVista').textContent = `${num}. ${item.titulo}`;
+  document.getElementById('textoVista').innerHTML = formatearTextoHimno(item.texto);
+  document.getElementById('vistaTipo').textContent = seccionActiva === 'himnos' ? `Himno ${num}` : `Coro ${num}`;
+  const vista = document.getElementById('vistaHimno');
+  vista.classList.add('abierta');
+  vista.scrollTop = 0;
+}
+
+function cerrarVista(){
+  document.getElementById('vistaHimno').classList.remove('abierta');
+  limpiarBusqueda();
+}
+
+document.getElementById('btnAtras').addEventListener('click', cerrarVista);
+
+document.getElementById('btnLetraMas').addEventListener('click', ()=>{
+  if(tamanoLetra < 36){
+    tamanoLetra += 2;
+    document.getElementById('cuerpoVista').style.fontSize = tamanoLetra + 'px';
+  }
+});
+
+document.getElementById('btnLetraMenos').addEventListener('click', ()=>{
+  if(tamanoLetra > 16){
+    tamanoLetra -= 2;
+    document.getElementById('cuerpoVista').style.fontSize = tamanoLetra + 'px';
+  }
+});
+
+document.getElementById('navIndice').addEventListener('click', ()=>{
+  marcarNav('navIndice');
+  cerrarVista();
+  cerrarPagina('paginaMarcadores');
+  cerrarPagina('paginaAcerca');
+  limpiarBusqueda();
+});
+
+document.getElementById('navFav').addEventListener('click', ()=>{
+  marcarNav('navFav');
+  cerrarVista();
+  cerrarPagina('paginaMarcadores');
+  cerrarPagina('paginaAcerca');
+  listarFavoritos();
+});
+
+document.getElementById('navMarc').addEventListener('click', ()=>{
+  marcarNav('navMarc');
+  abrirPagina('paginaMarcadores');
+});
+
+document.getElementById('navAcerca').addEventListener('click', ()=>{
+  marcarNav('navAcerca');
+  abrirPagina('paginaAcerca');
+});
+
+function marcarNav(id){
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('activo'));
+  const target = document.getElementById(id);
+  if(target) target.classList.add('activo');
+}
+
+function abrirPagina(id){
+  const pag = document.getElementById(id);
+  if(pag) pag.classList.add('abierta');
+}
+
+function cerrarPagina(id){
+  const pag = document.getElementById(id);
+  if(pag) pag.classList.remove('abierta');
+}
+
+document.getElementById('btnAtrasMarc').addEventListener('click', ()=>{
+  cerrarPagina('paginaMarcadores');
+  marcarNav('navIndice');
+  limpiarBusqueda();
+});
+
+document.getElementById('btnAtrasAcerca').addEventListener('click', ()=>{
+  cerrarPagina('paginaAcerca');
+  marcarNav('navIndice');
+  limpiarBusqueda();
+});
+
+document.getElementById('areaMarcadores').addEventListener('input', guardarTodo);
+document.getElementById('areaAcerca').addEventListener('input', guardarTodo);
+
+document.getElementById('btnHimnos').addEventListener('click', ()=>{
+  seccionActiva = 'himnos';
+  document.getElementById('btnHimnos').classList.add('activa');
+  document.getElementById('btnCoros').classList.remove('activa');
+  limpiarBusqueda();
+});
+
+document.getElementById('btnCoros').addEventListener('click', ()=>{
+  seccionActiva = 'coros';
+  document.getElementById('btnCoros').classList.add('activa');
+  document.getElementById('btnHimnos').classList.remove('activa');
+  limpiarBusqueda();
+});
+
+const menuLateral = document.getElementById('menuLateral');
+const capaFondo = document.getElementById('capaFondo');
+const btnMenu = document.getElementById('btnMenu');
+if(btnMenu){
+  btnMenu.addEventListener('click', ()=>{
+    if(menuLateral) menuLateral.classList.add('abierto');
+    if(capaFondo) capaFondo.classList.add('abierta');
+  });
+}
+
+function cerrarMenu(){
+  if(menuLateral) menuLateral.classList.remove('abierto');
+  if(capaFondo) capaFondo.classList.remove('abierta');
+}
+
+const btnCerrarMenu = document.getElementById('btnCerrarMenu');
+if(btnCerrarMenu) btnCerrarMenu.addEventListener('click', cerrarMenu);
+if(capaFondo) capaFondo.addEventListener('click', cerrarMenu);
+
+const btnEditar = document.getElementById('btnEditar');
+if(btnEditar){
+  btnEditar.addEventListener('click', ()=>{
+    modoEdicion = !modoEdicion;
+    if(modoEdicion){
+      btnEditar.classList.add('activo');
+      btnEditar.textContent = 'CANCELAR EDICIÓN';
+    }else{
+      btnEditar.classList.remove('activo');
+      btnEditar.textContent = 'MODO EDICIÓN';
+    }
+  });
+}
+
+function abrirEditor(num){
+  numeroEditando = num;
+  const mapa = seccionActiva === 'himnos' ? datosHimnos : datosCoros;
+  const item = mapa[num] || {titulo: '', texto: ''};
+  document.getElementById('tipoEditor').textContent = seccionActiva.toUpperCase();
+  document.getElementById('numEditor').textContent = `#${num}`;
+  document.getElementById('tituloEditor').value = item.titulo || '';
+  document.getElementById('textoEditor').value = item.texto || '';
+  document.getElementById('modalEditor').classList.add('abierto');
+}
+
+const btnCerrarEditor = document.getElementById('btnCerrarEditor');
+if(btnCerrarEditor){
+  btnCerrarEditor.addEventListener('click', ()=>{
+    document.getElementById('modalEditor').classList.remove('abierto');
+  });
+}
+
+const btnGuardarHimno = document.getElementById('btnGuardarHimno');
+if(btnGuardarHimno){
+  btnGuardarHimno.addEventListener('click', ()=>{
+    if(!numeroEditando) return;
+    const mapa = seccionActiva === 'himnos' ? datosHimnos : datosCoros;
+    const tit = document.getElementById('tituloEditor').value.trim();
+    const txt = document.getElementById('textoEditor').value.trim();
+    if(tit || txt){
+      mapa[numeroEditando] = {titulo: tit, texto: txt};
+    }else{
+      delete mapa[numeroEditando];
+    }
+    guardarTodo();
+    listarElementos();
+    document.getElementById('modalEditor').classList.remove('abierto');
+  });
+}
+
+const btnGuardarTit = document.getElementById('btnGuardarTit');
+if(btnGuardarTit){
+  btnGuardarTit.addEventListener('click', ()=>{
+    const t1 = document.getElementById('titPersonal1').value.trim();
+    const t2 = document.getElementById('titPersonal2').value.trim();
+    if(t1) document.getElementById('appTit1').textContent = t1;
+    if(t2) document.getElementById('appTit2').textContent = t2;
+    guardarTodo();
+    alert('Título guardado correctamente.');
+  });
+}
+
+const btnProcesar = document.getElementById('btnProcesar');
+if(btnProcesar){
+  btnProcesar.addEventListener('click', ()=>{
+    const raw = document.getElementById('cargaMasiva').value;
+    if(!raw.trim()) return alert('Pega el texto a cargar.');
+    const bloques = raw.split(/---|\*\*\*/);
+    let procesados = 0;
+    const mapa = seccionActiva === 'himnos' ? datosHimnos : datosCoros;
+    bloques.forEach(b =>{
+      const lineas = b.trim().split('\n').map(l => l.trim()).filter(l => l);
+      if(lineas.length >= 2){
+        const num = parseInt(lineas[0]);
+        if(!isNaN(num)){
+          const titulo = lineas[1];
+          const texto = lineas.slice(2).join('\n');
+          mapa[num] = {titulo, texto};
+          procesados++;
+        }
+      }
+    });
+    guardarTodo();
+    listarElementos();
+    document.getElementById('cargaMasiva').value = '';
+    alert(`Se cargaron/actualizaron ${procesados} elementos.`);
+    cerrarMenu();
+  });
+}
+
+const btnCargarRango = document.getElementById('btnCargarRango');
+if(btnCargarRango){
+  btnCargarRango.addEventListener('click', ()=>{
+    const desde = parseInt(document.getElementById('rangoDesde').value);
+    const hasta = parseInt(document.getElementById('rangoHasta').value);
+    const raw = document.getElementById('cargaMasiva').value;
+    if(isNaN(desde) || isNaN(hasta) || desde > hasta) return alert('Verifica los rangos.');
+    if(!raw.trim()) return alert('Pega el contenido en el área de texto.');
+    const bloques = raw.split(/---|\*\*\*/);
+    let idxNum = desde;
+    const mapa = seccionActiva === 'himnos' ? datosHimnos : datosCoros;
+    bloques.forEach(b =>{
+      if(idxNum > hasta) return;
+      const lineas = b.trim().split('\n').map(l => l.trim()).filter(l => l);
+      if(lineas.length >= 1){
+        const titulo = lineas[0];
+        const texto = lineas.slice(1).join('\n');
+        mapa[idxNum] = {titulo, texto};
+        idxNum++;
+      }
+    });
+    guardarTodo();
+    listarElementos();
+    alert(`Rango procesado hasta el #${idxNum - 1}.`);
+    cerrarMenu();
+  });
+}
+
+function descargarArchivo(contenido, nombreArchivo, tipoMime) {
+  try {
+    const dataUri = 'data:' + tipoMime + ';charset=utf-8,' + encodeURIComponent(contenido);
+    const a = document.createElement('a');
+    a.href = dataUri;
+    a.download = nombreArchivo;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  } catch(e) { alert('No se pudo descargar.'); }
+}
+
+const btnRespaldar = document.getElementById('btnRespaldar');
+if(btnRespaldar){
+  btnRespaldar.addEventListener('click', ()=>{
+    const respaldo = {datosHimnos,datosCoros,favoritos,marcadores:document.getElementById('areaMarcadores').value,acerca:document.getElementById('areaAcerca').value,tit1:document.getElementById('appTit1').textContent,tit2:document.getElementById('appTit2').textContent};
+    descargarArchivo(JSON.stringify(respaldo,null,2),'respaldo_himnario.json','application/json');
+  });
+}
+
+const btnRestaurar = document.getElementById('btnRestaurar');
+if(btnRestaurar){
+  btnRestaurar.addEventListener('click', ()=>{document.getElementById('archivoRespaldo').click();});
+}
+
+const archivoRespaldo = document.getElementById('archivoRespaldo');
+if(archivoRespaldo){
+  archivoRespaldo.addEventListener('change', (e)=>{
+    const file = e.target.files[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt)=>{
+      try{
+        const data = JSON.parse(evt.target.result);
+        if(data.datosHimnos) datosHimnos = data.datosHimnos;
+        if(data.datosCoros) datosCoros = data.datosCoros;
+        if(data.favoritos) favoritos = data.favoritos;
+        if(data.marcadores) document.getElementById('areaMarcadores').value = data.marcadores;
+        if(data.acerca) document.getElementById('areaAcerca').value = data.acerca;
+        if(data.tit1) document.getElementById('appTit1').textContent = data.tit1;
+        if(data.tit2) document.getElementById('appTit2').textContent = data.tit2;
+        guardarTodo(); listarElementos(); alert('Restaurado correctamente.'); cerrarMenu();
+      }catch(err){alert('Archivo no válido.');}
+    };
+    reader.readAsText(file);
+  });
+}
+
+const btnExportar = document.getElementById('btnExportar');
+if(btnExportar){
+  btnExportar.addEventListener('click', ()=>{
+    let clon = document.documentElement.cloneNode(true);
+    clon.querySelector('body').classList.add('app-fija');
+    const scriptGuardado = `<script>
+window.datosHimnos = ${JSON.stringify(datosHimnos)};
+window.datosCoros = ${JSON.stringify(datosCoros)};
+window.favoritos = ${JSON.stringify(favoritos)};
+window.marcadores = ${JSON.stringify(document.getElementById('areaMarcadores').value)};
+window.acerca = ${JSON.stringify(document.getElementById('areaAcerca').value)};
+window.tit1 = ${JSON.stringify(document.getElementById('appTit1').textContent)};
+window.tit2 = ${JSON.stringify(document.getElementById('appTit2').textContent)};
+<\/script>`;
+    let htmlFinal = '<!DOCTYPE html>\n' + clon.outerHTML;
+    htmlFinal = htmlFinal.replace('</head>', scriptGuardado + '</head>');
+    descargarArchivo(htmlFinal, 'Himnario_Final.html', 'text/html');
+  });
+}
+
+const btnBorrarTodo = document.getElementById('btnBorrarTodo');
+if(btnBorrarTodo){
+  btnBorrarTodo.addEventListener('click', ()=>{
+    if(confirm('¿Eliminar TODOS los datos?')){
+      localStorage.clear(); datosHimnos={}; datosCoros={}; favoritos={};
+      document.getElementById('areaMarcadores').value=''; document.getElementById('areaAcerca').value='';
+      listarElementos(); alert('Borrado completo.'); cerrarMenu();
+    }
+  });
+}
+
+window.addEventListener('DOMContentLoaded', cargarTodo);
+</script>
+</body>
+</html>
